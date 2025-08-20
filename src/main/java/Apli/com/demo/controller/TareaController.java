@@ -54,4 +54,36 @@ public class TareaController {
         tareaRepository.save(tarea);
         return ResponseEntity.ok(tarea);
     }
+
+    @PutMapping("/{tareaId}")
+    public ResponseEntity<Tarea> actualizarTarea(@PathVariable Long usuarioId, @PathVariable Long tareaId,
+            @RequestBody Tarea tareaActualizada) {
+        Usuario usuario = usuarioRepository.findById(usuarioId).orElse(null);
+        if (usuario == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return tareaRepository.findById(tareaId)
+                .filter(tarea -> tarea.getUsuario().getId().equals(usuarioId))
+                .map(tarea -> {
+                    tarea.setDescripcion(tareaActualizada.getDescripcion());
+                    tarea.setCompletada(tareaActualizada.isCompletada());
+                    return ResponseEntity.ok(tareaRepository.save(tarea));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{tareaId}")
+    public ResponseEntity<Void> borrarTarea(@PathVariable Long usuarioId, @PathVariable Long tareaId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId).orElse(null);
+        if (usuario == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return tareaRepository.findById(tareaId)
+                .filter(tarea -> tarea.getUsuario().getId().equals(usuarioId))
+                .map(tarea -> {
+                    tareaRepository.deleteById(tareaId);
+                    return ResponseEntity.noContent().<Void>build();
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
 }
